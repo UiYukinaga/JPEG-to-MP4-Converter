@@ -1,5 +1,5 @@
 #=====================================================================
-# 指定したディレクトリ内のjpgファイルを繋ぎ合わせてタイムラプス動画(mp4)に変換する
+# jpgファイルを繋ぎ合わせてスライドショー動画(mp4)に変換する
 #---------------------------------------------------------------------
 # Arguments:
 #   1 ディレクトリパス or 'help'コマンド
@@ -8,7 +8,6 @@
 #   4 NONE or フレームレート[fps]
 # Return: None
 # Output: Converted MP4 file
-# Reference from: https://yusei-roadstar.hatenablog.com/entry/2019/11/29/174448
 #=====================================================================
 import cv2
 import glob
@@ -28,41 +27,48 @@ def is_int(dat):
     except ValueError:
         return False
 
-
+# スライドショー動画を作成するメソッド
+# Arguments: 基になる画像リスト, 動画の幅, 動画の高さ, 画像１枚の表示時間[sec], 画像のディレクトリパス
 def make_slide_show(images, w, h, time, path):
-    # 処理開始時間を取得する
-#    start = time.time()
-    file_name = "slide_show.mp4"
-    
+    current_dt = datetime.datetime.now()
+    dt_str = current_dt.strftime('%Y%m%d_%H%M%S')
+    file_name = dt_str + '_slide.mp4'
     save_path = os.path.join(os.getcwd(), file_name)
    
     fourcc = cv2.VideoWriter_fourcc('m','p','4','v')
-    fps = 30
+    fps = 20
     video = cv2.VideoWriter(save_path, fourcc, fps, (w, h))
-    print(">> {0}秒毎に切り替えるスライドショーを作成しています...".format(time))
+    print(">> 写真を{0}秒毎に切り替える動画を作っているよ！".format(time))
     print(">> ちょっと待ってねー")
     
     images.sort()
 
+    count = 0
+    n_process = len(images) * fps * time
+    progress = 0
     for i in range(len(images)):
         for j in range(fps * time):
             img = cv2.imread(images[i])
             img = cv2.resize(img,(w, h))
-            video.write(img) 
+            video.write(img)
 
+            # 処理の進捗表示
+            count += 1
+            progress = 100 * count / n_process
+            if progress == 100:
+                print('\r>> 変換完了！')
+            else:
+                print('\r>> {0}%'.format(progress),end="")
+                    
     video.release()
 
-    # 動画変換にかかった時間を計算する
-#    elapsed_time = time.time() - start
-    # 経過時間を表示
-    print(">> Completed!")
-#    print(">> {0}[sec]で動画変換を完了しました。".format(elapsed_time))
-    print()
-    print(">> 出力ファイル: " + save_path)
-    print(">> ({0} x {1}, {2}[fps])".format(w, h, fps))
-    
+    print(">> 動画ができたよ！")
+    print(">> 保存場所: " + save_path)
+    print(">> サイズ: {0} x {1}".format(w, h))
+    print(">> フレームレート: {0}[FPS]".format(fps) )
+
+
 if __name__ == '__main__':
-    
     args = sys.argv
     
     # 第1引数: ディレクトリパス or HELPコマンド判定

@@ -1,5 +1,5 @@
 #=====================================================================
-# 指定したディレクトリ内のjpgファイルを繋ぎ合わせてタイムラプス動画(mp4)に変換する
+# jpgファイルを繋ぎ合わせて動画(mp4)に変換する
 #---------------------------------------------------------------------
 # Arguments:
 #   1 ディレクトリパス or 'help'コマンド
@@ -8,7 +8,6 @@
 #   4 NONE or フレームレート[fps]
 # Return: None
 # Output: Converted MP4 file
-# Reference from: https://yusei-roadstar.hatenablog.com/entry/2019/11/29/174448
 #=====================================================================
 import cv2
 import glob
@@ -34,32 +33,41 @@ def convert_to_mp4(images, w, h, fps, path):
     
     current_dt = datetime.datetime.now()
     dt_str = current_dt.strftime('%Y%m%d_%H%M%S')
-    file_name = dt_str + '.mp4'
-    
-    save_path = os.path.join(path, file_name)
-    
+    file_name = dt_str + '_movie.mp4'
+    save_path = os.path.join(os.getcwd(), file_name)
+
     fourcc = cv2.VideoWriter_fourcc('m','p','4','v')
     video = cv2.VideoWriter(save_path, fourcc, fps, (w, h))
     
-    print(">> 動画変換中...")
+    print(">> 動画形式に変換しているよ。ちょっと待ってね。")
     
     images.sort()
     
+    count = 0
+    n_images = len(images)
+    progress = 0
     for i in range(len(images)):
         img = cv2.imread(images[i])
         img = cv2.resize(img,(w, h))
         video.write(img) 
-        
+        # 処理の進捗表示
+        count += 1
+        progress = 100 * count / n_images
+        if progress == 100:
+            print('\r>> 変換完了！')
+        else:
+            print('\r>> {0}%'.format(progress),end="")
+    
     video.release()
 
     # 動画変換にかかった時間を計算する
     elapsed_time = time.time() - start
     # 経過時間を表示
-    print(">> Completed!")
-    print(">> {0}[sec]で動画変換を完了しました。".format(elapsed_time))
-    print()
-    print(">> 出力ファイル: " + save_path)
-    print(">> ({0} x {1}, {2}[fps])".format(w, h, fps))
+#    print("\r\n")
+    print(">> 変換にかかった時間: {0}[sec]".format(elapsed_time))
+    print(">> 変換した動画の場所: " + save_path)
+    print(">> 動画のサイズ: {0} x {1}".format(w, h))
+    print(">> フレームレート: {0}fps".format(fps))
     
 if __name__ == '__main__':
     
